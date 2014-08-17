@@ -33,7 +33,12 @@ Book menus will allow you to do this since it's a normal menu.
 #### Notes ####
 
 - As this module intercepts the `admin/content/book/*` page, other book
-  manipulation module may not work with it.
+  manipulation module may not work with it,
+- If you are going to use the standard *Book Navigation* block with the *show
+  block only on book pages* setting, ensure that you nest all of the items under
+  the book parent, as book.module removes the top-level menu link.  If you would
+  like to include the main book page in the menu, just create a new link to the
+  book parent in the menu configuration and nest it under the original.
 
 [special_menu_items]: https://www.drupal.org/project/special_menu_items
 [menu_html]: https://www.drupal.org/project/menu_html
