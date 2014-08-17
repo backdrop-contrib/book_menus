@@ -1,0 +1,127 @@
+<?php
+
+/**
+ * @file
+ * Functionality for book_menus.module.
+ */
+
+/**
+ * Implements hook_form_FORM_ID_alter().
+ */
+function book_menus_form_book_admin_edit_alter(&$form, &$form_state) {
+
+  // Get the menu name.
+  $menu_name = !empty($form['#node']->book['menu_name']) ?
+    $form['#node']->book['menu_name'] : FALSE;
+
+  // Should (will) always be a menu name.
+  if (!$menu_name) {
+    return;
+  }
+
+  // See if this is a book_menus book.
+  if (in_array($menu_name, variable_get('book_menus', array()))) {
+
+    // Make sure the user has access.
+    if (!user_access('administer menu')) {
+      drupal_set_message(t('This is a Book Menu and you do not have the "administer menu" permission'), 'error');
+      return array();
+    }
+
+    // Go to the menu page instead.
+    drupal_goto('admin/structure/menu/manage/' . $menu_name);
+  }
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter().
+ *
+ * The book admin settings form.
+ */
+function book_menus_form_book_admin_settings_alter(&$form, &$form_state) {
+
+  // Move actions below new element.
+  $form['actions']['#weight'] = 10;
+
+  // Start with empty message.
+  $form['book_menus'] = array(
+    '#prefix' => '<div class="form-item">',
+    '#suffix' => '</div>',
+    '#markup' => '<label>' . t('Book Menus') . '</label>' . t('Create some books first.'),
+  );
+
+  // Get all the books.
+  $books = book_get_books();
+
+  // Make sure there's some books.
+  if (count($books)) {
+
+    // Get the original defaults.
+    $book_menus_defaults = variable_get('book_menus', array());
+
+    // Save them for submission processing.
+    $form_state['storage']['book_menus_original'] = array_flip($book_menus_defaults);
+
+    // Change the form item to checkboxes.
+    $form['book_menus'] = array(
+      '#type' => 'checkboxes',
+      '#title' => t('Book Menus'),
+      '#description' => t(
+        'Select the books that should get an entry in the Drupal <a href="@menu_link">menu list</a>.',
+        array('@menu_link' => base_path() . 'admin/structure/menu')),
+      '#default_value' => $book_menus_defaults,
+      '#options' => array(),
+    );
+
+    // Go through each book.
+    foreach ($books as $book) {
+      $form['book_menus']['#options'][$book['menu_name']] = $book['link_title'];
+    }
+
+    // Add a submission function.
+    $form['#submit'][] = 'book_menus_form_book_admin_settings_submit';
+  }
+}
+
+/**
+ * Submission callback for the book admin settings form.
+ */
+function book_menus_form_book_admin_settings_submit(&$form, &$form_state) {
+
+  // Get the original settings.
+  $book_menus_original = $form_state['storage']['book_menus_original'];
+
+  // Get the new settings.
+  $book_menus = $form_state['values']['book_menus'];
+
+  // Go through each settings.
+  foreach ($book_menus as $key => $value) {
+
+    // Was it checked in the new but not original.
+    if ($value !== 0 && !array_key_exists($key, $book_menus_original)) {
+
+      // Add the item to the custom menu table.
+      db_insert('menu_custom')
+        ->fields(array(
+        'menu_name' => $key,
+        'title' => $form['book_menus']['#options'][$key],
+        'description' => '',
+      ))->execute();
+
+      // Rebuild the menus.
+      menu_rebuild();
+    }
+
+    // Was it not checked in the new but was in the original.
+    elseif ($value === 0 && array_key_exists($key, $book_menus_original)) {
+
+      // Remove the record.
+      db_delete('menu_custom')
+        ->condition('menu_name', $key)
+        ->execute();
+
+      // Rebuild the menus.
+      menu_rebuild();
+    }
+  }
+}
