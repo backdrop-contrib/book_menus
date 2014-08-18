@@ -6,6 +6,74 @@
  */
 
 /**
+ * Implements hook_block_info().
+ */
+function book_menus_block_info() {
+
+  // Define the block;
+  $block = array();
+  $block['navigation']['info'] = t('Book Menus navigation');
+  $block['navigation']['cache'] = DRUPAL_CACHE_PER_PAGE | DRUPAL_CACHE_PER_ROLE;
+
+  // Return the renderable block.
+  return $block;
+}
+
+/**
+ * Implements hook_block_view().
+ *
+ * Main differences from core book.module
+ *   - No "All Pages" (use core for that).
+ *   - No shifting the tree to remove the first element.
+ *   - Do not pass the book menu item to menu_tree_output (want full tree).
+ */
+function book_menus_block_view($delta = '') {
+
+  // Store the renderable block.
+  $block = array();
+
+  // Start with no bid.
+  $current_bid = 0;
+
+  // Try to get the node.
+  if ($node = menu_get_object()) {
+
+    // Check if this node had a book.
+    $current_bid = empty($node->book['bid']) ? 0 : $node->book['bid'];
+  }
+
+  // This node has a book.
+  if ($current_bid) {
+
+    // Only display this block when the user is browsing a book.
+    $select = db_select('node', 'n')
+      ->fields('n', array('title'))
+      ->condition('n.nid', $node->book['bid'])
+      ->addTag('node_access');
+
+    // Get the title.
+    $title = $select->execute()->fetchField();
+
+    // Only show the block if the user has view access for the top-level node.
+    if ($title) {
+
+      // Build the full menu tree.
+      $tree = menu_tree_all_data($node->book['menu_name']);
+
+      // Set title to the main book node.
+      $block['subject'] = $title;
+
+      // Add the tree.
+      $block['content'] = menu_tree_output($tree);
+    }
+  }
+
+  // Return the renderable block.
+  return $block;
+}
+
+
+/**
  * Implements hook_form_FORM_ID_alter().
  */
 function book_menus_form_book_admin_edit_alter(&$form, &$form_state) {
@@ -16,7 +84,7 @@ function book_menus_form_book_admin_edit_alter(&$form, &$form_state) {
 
   // Should (will) always be a menu name.
   if (!$menu_name) {
-    return;
+    return NULL;
   }
 
   // See if this is a book_menus book.
