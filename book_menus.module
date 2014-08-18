@@ -193,3 +193,84 @@ function book_menus_form_book_admin_settings_submit(&$form, &$form_state) {
     }
   }
 }
+
+/**
+ * Implements hook_theme_registry_alter().
+ *
+ * Make our preprocess function run before book.module's.
+ */
+function book_menus_theme_registry_alter(&$theme_registry) {
+
+  // Make sure that the book navigation theme entry is present.
+  if (!empty($theme_registry['book_navigation']['preprocess functions'])) {
+
+    // Save the template function.
+    $template_function = 'template_preprocess_book_navigation';
+
+    // Get the current function order.
+    $functions_old = $theme_registry['book_navigation']['preprocess functions'];
+
+    // Make sure the one we want is in there.
+    if (!in_array($template_function, $functions_old)) {
+
+      // Functions not there, bail out.
+      return NULL;
+    }
+
+    // Get the template function index.
+    $index = array_search($template_function, $functions_old);
+
+    // Set the new order.
+    $theme_registry['book_navigation']['preprocess functions'] = array_merge(
+
+      // Add the functions before the template function.
+      array_slice($functions_old, 0, $index),
+
+      // Add the custom before preprocess function.
+      array('book_menus_preprocess_book_navigation_before'),
+
+      // Add the remaining functions.
+      array_slice($functions_old, $index)
+    );
+  }
+}
+
+/**
+ * Custom preprocess called before book.module's.
+ *
+ * This needs to run before because we're hijacking the creation of the book
+ * tree so that "non-links" are not considered by book.module when creating
+ * the navigation.
+ *
+ * @see book_menus_theme_registry_alter
+ * @see template_preprocess_book_navigation
+ */
+function book_menus_preprocess_book_navigation_before(&$variables) {
+
+  // Get the book link.
+  $book_link = $variables['book_link'];
+
+  // Get the flat menu if there is one.
+  $flat = &drupal_static('book_get_flat_menu', array());
+
+  // Create the flat menu if there isn't one.
+  if (!isset($flat[$book_link['mlid']])) {
+
+    // Call menu_tree_all_data() to take advantage of the menu system's caching.
+    $tree = menu_tree_all_data($book_link['menu_name'], $book_link, $book_link['depth'] + 1);
+    $flat[$book_link['mlid']] = array();
+    _book_flatten_menu($tree, $flat[$book_link['mlid']]);
+
+    // Remove any non-linked pages.
+    foreach ($flat[$book_link['mlid']] as $key => $value) {
+      if ($value['page_callback'] == 'drupal_not_found') {
+        unset($flat[$book_link['mlid']][$key]);
+      }
+    }
+
+    // Make sure the parent was a valid book page.
+    if (!array_key_exists($book_link['plid'], $flat[$book_link['mlid']])) {
+      $variables['book_link']['plid'] = FALSE;
+    }
+  }
+}
