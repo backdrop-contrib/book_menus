@@ -27,7 +27,7 @@ Book menus will allow you to do this since it's a normal menu.
 - You can also see the menu at `admin/structure/menu`,
 - Modify the menu as required.
 
-#### Blocks ####
+### Blocks ###
 
 This menu provides a block, *Book Menu Navigation*, that is similar in
 functionality to core book.module with the *show block only on book pages*
@@ -40,7 +40,7 @@ as core book.module passes the book menu item to menu_tree_output.
 You can still use the core book.module Book Navigation block, but on Book Menus
 it will likely be the *Book Menus navigation* block you're looking for.
 
-#### Notes ####
+### Notes ###
 
 - As this module intercepts the `admin/content/book/*` page, other book
   manipulation module may not work with it,
