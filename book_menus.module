@@ -256,10 +256,8 @@ function book_menus_preprocess_book_navigation_before(&$variables) {
   // Create the flat menu if there isn't one.
   if (!isset($flat[$book_link['mlid']])) {
 
-    // Call menu_tree_all_data() to take advantage of the menu system's caching.
-    $tree = menu_tree_all_data($book_link['menu_name'], $book_link, $book_link['depth'] + 1);
-    $flat[$book_link['mlid']] = array();
-    _book_flatten_menu($tree, $flat[$book_link['mlid']]);
+    // Get the flat menu.
+    $flat[$book_link['mlid']] = book_get_flat_menu($book_link);
 
     // Remove any non-linked pages.
     foreach ($flat[$book_link['mlid']] as $key => $value) {
@@ -270,7 +268,9 @@ function book_menus_preprocess_book_navigation_before(&$variables) {
 
     // Make sure the parent was a valid book page.
     if (!array_key_exists($book_link['plid'], $flat[$book_link['mlid']])) {
-      $variables['book_link']['plid'] = FALSE;
+
+      // Setting to TRUE tricks book.module not to display the "up" link.
+      $variables['book_link']['plid'] = TRUE;
     }
   }
 }
