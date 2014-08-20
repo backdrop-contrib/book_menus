@@ -274,3 +274,36 @@ function book_menus_preprocess_book_navigation_before(&$variables) {
     }
   }
 }
+
+/**
+ * Set the original parent for the book.
+ *
+ * @param object $node
+ *   The node object.
+ */
+function book_menus_node_presave($node) {
+
+  // Check if this is a book.
+  if (!empty($node->book['plid'])) {
+
+    // Save the original plid.
+    $node->original_plid = $node->book['plid'];
+  }
+}
+
+/**
+ * Implements hook_node_update().
+ */
+function book_menus_node_update($node) {
+
+  // Check if the original plid was set.
+  if (!empty($node->original_plid)) {
+
+    // book.module changes the plid if the plid wasn't a book item.
+    // Override that and set it to the original parent.
+    $node->book['plid'] = $node->original_plid;
+
+    // Save the menu link.
+    menu_link_save($node->book);
+  }
+}
