@@ -257,7 +257,7 @@ function book_menus_preprocess_book_navigation_before(&$variables) {
   if (!isset($flat[$book_link['mlid']])) {
 
     // Get the flat menu.
-    $flat[$book_link['mlid']] = book_get_flat_menu($book_link);
+    $flat[$book_link['mlid']] = book_menus_get_flat_menu($book_link);
 
     // Remove any non-linked pages.
     foreach ($flat[$book_link['mlid']] as $key => $value) {
@@ -273,6 +273,32 @@ function book_menus_preprocess_book_navigation_before(&$variables) {
       $variables['book_link']['plid'] = TRUE;
     }
   }
+}
+
+/**
+ * Gets the book menu tree for a page and returns it as a linear array.
+ *
+ * @param $book_link
+ *   A fully loaded menu link that is part of the book hierarchy.
+ *
+ * @return
+ *   A linear array of menu links in the order that the links are shown in the
+ *   menu, so the previous and next pages are the elements before and after the
+ *   element corresponding to the current node. The children of the current node
+ *   (if any) will come immediately after it in the array, and links will only
+ *   be fetched as deep as one level deeper than $book_link.
+ */
+function book_menus_get_flat_menu($book_link) {
+  $flat = &drupal_static(__FUNCTION__, array());
+
+  if (!isset($flat[$book_link['mlid']])) {
+    // Call menu_tree_all_data() to take advantage of the menu system's caching.
+    $tree = menu_tree_all_data($book_link['menu_name']);
+    $flat[$book_link['mlid']] = array();
+    _book_flatten_menu($tree, $flat[$book_link['mlid']]);
+  }
+
+  return $flat[$book_link['mlid']];
 }
 
 /**
