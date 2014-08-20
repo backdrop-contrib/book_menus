@@ -276,10 +276,9 @@ function book_menus_preprocess_book_navigation_before(&$variables) {
 }
 
 /**
- * Set the original parent for the book.
+ * Implements hook_node_presave().
  *
- * @param object $node
- *   The node object.
+ * Set the original parent for the book before book.module overwrites it.
  */
 function book_menus_node_presave($node) {
 
