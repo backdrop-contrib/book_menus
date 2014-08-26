@@ -293,6 +293,8 @@ function book_menus_get_flat_menu($book_link) {
 
   if (!isset($flat[$book_link['mlid']])) {
     // Call menu_tree_all_data() to take advantage of the menu system's caching.
+    // Override book.module and remove the second parameter so we get the full
+    // book.
     $tree = menu_tree_all_data($book_link['menu_name']);
     $flat[$book_link['mlid']] = array();
     _book_flatten_menu($tree, $flat[$book_link['mlid']]);
@@ -308,8 +310,28 @@ function book_menus_get_flat_menu($book_link) {
  */
 function book_menus_node_presave($node) {
 
-  // Check if this is a book.
-  if (!empty($node->book['plid'])) {
+
+  // Check if this is a book menu node with a menu entry.
+  if (
+
+    // See if there's a parent item.
+    !empty($node->book['plid']) &&
+
+    // And it's a real item.
+    $node->book['plid'] > 0 &&
+
+    // And there's a book id.
+    !empty($node->book['bid']) &&
+
+    // And it's a real book.
+    $node->book['bid'] > 0 &&
+
+    // And it's set to a menu.
+    !empty($node->book['menu_name']) &&
+
+    // And it's a book_menu.
+    in_array($node->book['menu_name'], variable_get('book_menus', array()))
+  ) {
 
     // Save the original plid.
     $node->original_plid = $node->book['plid'];
