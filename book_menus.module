@@ -310,7 +310,6 @@ function book_menus_get_flat_menu($book_link) {
  */
 function book_menus_node_presave($node) {
 
-
   // Check if this is a book menu node with a menu entry.
   if (
 
