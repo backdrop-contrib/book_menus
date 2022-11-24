@@ -1,5 +1,5 @@
 name = Book Menus
-description = Allows a user to manage book navigation via the normal Drupal admin menu interface.
+description = Allows a user to manage book navigation via the normal Backdrop admin menu interface.
 backdrop = 1.x
 type = module
 
