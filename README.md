@@ -43,7 +43,7 @@ it will likely be the *Book Menus Navigation* block you're looking for.
 
 ### Notes
 - As this module intercepts the `admin/content/book/*` page, other book
-  manipulation module may not work with it,
+  manipulation module may not work with it.
 
 ## Issues
 Bugs and Feature Requests should be reported in the Issue Queue:
