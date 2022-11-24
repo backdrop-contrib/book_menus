@@ -1,6 +1,13 @@
 name = Book Menus
 description = Allows a user to manage book navigation via the normal Drupal admin menu interface.
-package = Other
-core = 7.x
+backdrop = 1.x
+type = module
+
 dependencies[] = menu
 dependencies[] = book
+
+package = Other
+tags[] = Book
+tags[] = Menus
+tags[] = Content
+tags[] = Site Navigation

@@ -19,22 +19,51 @@ function book_menus_install() {
  * Implements hook_uninstall().
  */
 function book_menus_uninstall() {
-
+  $config = config('book_menus.settings');
   // Get any book menus.
-  $book_menuss = variable_get('book_menus', array());
+  $book_menus_list = $config->get('book_menus');
 
   // Each book menu.
-  foreach ($book_menuss as $menu_name) {
-
-    // Remove that menu from the custom_menu database.
-    db_delete('menu_custom')
-      ->condition('menu_name', $menu_name)
-      ->execute();
+  foreach ($book_menus_list as $menu_name) {
+    // Delete the menu from config.
+    $config_menu = config('menu.menu.' . $menu_name);
+    $config_menu->delete();
   }
 
   // Remove the custom variable.
-  variable_del('book_menus');
+  $config->delete('book_menus');
 
   // Rebuild the menus.
   menu_rebuild();
+}
+
+function book_menus_update_1000() {
+  // List of books that use book_menus.
+    // Migrate variable to config
+    $config = config('book_menus.settings');
+    $config->set('book_menus', update_variable_get('book_menus', array()));
+    // Delete variable
+    update_variable_del('book_menus');
+  // Custom menus.
+    $menu_list = $config->get('book_menus');
+    // Loop through each menu listed as being a book_menu.
+    foreach ($menu_list as $menu_name) {
+      // Get the menu details from the deprecated menu_custom table.
+      $menu_details = db_query("SELECT 'menu_name', 'title', 'description' FROM {menu_custom} WHERE 'menu_name' = :menu_name",
+        array(':menu_name' => $menu_name,)
+      );
+      // Set the menu config item.
+      $config_menu = config('menu.menu.' . $menu_name);
+      // Add the details.
+      $config_menu->setMultiple(array(
+        'menu_name' => $menu_details['menu_name'],
+        'title' => $menu_details['title'],
+        'description' => $menu_details['description'],
+      ));
+      $config_menu->save();
+      // Remove the old menu_custom record.
+      db_delete('menu_custom')
+        ->condition('menu_name', $menu_name)
+        ->execute();
+    }
 }
