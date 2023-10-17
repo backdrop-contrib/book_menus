@@ -1,5 +1,4 @@
 <?php
-
 /**
  * @file
  * Installation functionality for book_menus.
@@ -37,33 +36,37 @@ function book_menus_uninstall() {
   menu_rebuild();
 }
 
+/**
+ * Implements hook_update_N().
+ */
 function book_menus_update_1000() {
   // List of books that use book_menus.
-    // Migrate variable to config
-    $config = config('book_menus.settings');
-    $config->set('book_menus', update_variable_get('book_menus', array()));
-    // Delete variable
-    update_variable_del('book_menus');
+  // Migrate variable to config.
+  $config = config('book_menus.settings');
+  $config->set('book_menus', update_variable_get('book_menus', array()));
+  // Delete variable.
+  update_variable_del('book_menus');
+
   // Custom menus.
-    $menu_list = $config->get('book_menus');
-    // Loop through each menu listed as being a book_menu.
-    foreach ($menu_list as $menu_name) {
-      // Get the menu details from the deprecated menu_custom table.
-      $menu_details = db_query("SELECT 'menu_name', 'title', 'description' FROM {menu_custom} WHERE 'menu_name' = :menu_name",
-        array(':menu_name' => $menu_name,)
-      );
-      // Set the menu config item.
-      $config_menu = config('menu.menu.' . $menu_name);
-      // Add the details.
-      $config_menu->setMultiple(array(
-        'menu_name' => $menu_details['menu_name'],
-        'title' => $menu_details['title'],
-        'description' => $menu_details['description'],
-      ));
-      $config_menu->save();
-      // Remove the old menu_custom record.
-      db_delete('menu_custom')
-        ->condition('menu_name', $menu_name)
-        ->execute();
-    }
+  $menu_list = $config->get('book_menus');
+  // Loop through each menu listed as being a book_menu.
+  foreach ($menu_list as $menu_name) {
+    // Get the menu details from the deprecated menu_custom table.
+    $menu_details = db_query("SELECT 'menu_name', 'title', 'description' FROM {menu_custom} WHERE 'menu_name' = :menu_name",
+      array(':menu_name' => $menu_name,)
+    );
+    // Set the menu config item.
+    $config_menu = config('menu.menu.' . $menu_name);
+    // Add the details.
+    $config_menu->setMultiple(array(
+      'menu_name' => $menu_details['menu_name'],
+      'title' => $menu_details['title'],
+      'description' => $menu_details['description'],
+    ));
+    $config_menu->save();
+    // Remove the old menu_custom record.
+    db_delete('menu_custom')
+      ->condition('menu_name', $menu_name)
+      ->execute();
+  }
 }

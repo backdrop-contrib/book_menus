@@ -1,5 +1,4 @@
 <?php
-
 /**
  * @file
  * Functionality for book_menus.module.
@@ -21,7 +20,7 @@ function book_menus_config_info() {
  */
 function book_menus_block_info() {
 
-  // Define the block;
+  // Define the block.
   $block = array();
   $block['navigation']['info'] = t('Book Menus navigation');
   $block['navigation']['cache'] = BACKDROP_CACHE_PER_PAGE | BACKDROP_CACHE_PER_ROLE;
@@ -90,8 +89,7 @@ function book_menus_block_view($delta = '') {
 function book_menus_form_book_admin_edit_alter(&$form, &$form_state) {
 
   // Get the menu name.
-  $menu_name = !empty($form['#node']->book['menu_name']) ?
-    $form['#node']->book['menu_name'] : FALSE;
+  $menu_name = !empty($form['#node']->book['menu_name']) ? $form['#node']->book['menu_name'] : FALSE;
 
   // Should (will) always be a menu name.
   if (!$menu_name) {
@@ -99,7 +97,7 @@ function book_menus_form_book_admin_edit_alter(&$form, &$form_state) {
   }
 
   // See if this is a book_menus book.
-  if (in_array($menu_name,  config_get('book_menus.settings', 'book_menus'))) {
+  if (in_array($menu_name, config_get('book_menus.settings', 'book_menus'))) {
 
     // Make sure the user has access.
     if (!user_access('administer menu')) {
@@ -136,7 +134,7 @@ function book_menus_form_book_admin_settings_alter(&$form, &$form_state) {
   if (count($books)) {
 
     // Get the original defaults.
-    $book_menus_defaults = config_get('book_menus.settings','book_menus');
+    $book_menus_defaults = config_get('book_menus.settings', 'book_menus');
 
     // Save them for submission processing.
     $form_state['storage']['book_menus_original'] = array_flip($book_menus_defaults);
@@ -173,6 +171,9 @@ function book_menus_form_book_admin_settings_submit(&$form, &$form_state) {
   // Get the new settings.
   $book_menus = $form_state['values']['book_menus'];
 
+  // Save the settings to config.
+  config_set('book_menus.settings', 'book_menus', $book_menus);
+
   // Go through each settings.
   foreach ($book_menus as $key => $value) {
     // Define the menu config item.
@@ -183,9 +184,9 @@ function book_menus_form_book_admin_settings_submit(&$form, &$form_state) {
       // Add the item to the custom menu table.
       $config_menu->setMultiple(
         array(
-        'menu_name' => $key,
-        'title' => $form['book_menus']['#options'][$key],
-        'description' => '',
+          'menu_name' => $key,
+          'title' => $form['book_menus']['#options'][$key],
+          'description' => '',
         )
       );
       $config_menu->save();
@@ -290,17 +291,17 @@ function book_menus_preprocess_book_navigation_before(&$variables) {
 /**
  * Gets the book menu tree for a page and returns it as a linear array.
  *
- * @param $book_link
+ * @param array $book_link
  *   A fully loaded menu link that is part of the book hierarchy.
  *
- * @return
+ * @return array
  *   A linear array of menu links in the order that the links are shown in the
  *   menu, so the previous and next pages are the elements before and after the
  *   element corresponding to the current node. The children of the current node
  *   (if any) will come immediately after it in the array, and links will only
  *   be fetched as deep as one level deeper than $book_link.
  */
-function book_menus_get_flat_menu($book_link) {
+function book_menus_get_flat_menu(array $book_link) {
   $flat = &backdrop_static(__FUNCTION__, array());
 
   if (!isset($flat[$book_link['mlid']])) {
