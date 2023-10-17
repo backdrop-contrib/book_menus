@@ -171,6 +171,9 @@ function book_menus_form_book_admin_settings_submit(&$form, &$form_state) {
   // Get the new settings.
   $book_menus = $form_state['values']['book_menus'];
 
+  // Save the settings to config.
+  config_set('book_menus.settings', 'book_menus', $book_menus);
+
   // Go through each settings.
   foreach ($book_menus as $key => $value) {
     // Define the menu config item.
